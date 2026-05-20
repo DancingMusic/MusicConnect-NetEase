@@ -1,19 +1,30 @@
 {
   "name": "@dancingmusic/music-connect-netease",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "NetEase Cloud Music connector for DancingMusic. Backed by a public NeteaseCloudMusicApi proxy.",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "exports": {
-    ".": { "import": "./dist/index.js" }
+    ".": {
+      "import": "./dist/index.js"
+    }
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --clean --target es2020 --no-splitting",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["dancingmusic", "music-connector", "netease", "netease-cloud-music"],
+  "keywords": [
+    "dancingmusic",
+    "music-connector",
+    "netease",
+    "netease-cloud-music"
+  ],
   "license": "MIT",
   "peerDependencies": {
     "@dancingmusic/music-store": ">=0.1.0"

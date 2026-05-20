@@ -36,8 +36,19 @@ export class NeteaseConnector implements MusicConnector {
     id: "netease-cloud-music",
     name: "网易云音乐",
     description: "NetEase Cloud Music data source connector",
-    version: "0.1.0",
+    version: "0.2.0",
     capabilities: ["search", "stream", "lyrics"],
+    configSchema: [
+      {
+        key: "apiBaseUrl",
+        label: "API 端点",
+        type: "url",
+        required: false,
+        default: "https://netease-cloud-music-api-theta-ten.vercel.app",
+        placeholder: "https://your-netease-api.example.com",
+        help: "自部署 NeteaseCloudMusicApi 地址。留空使用公开代理（有限额）。",
+      },
+    ],
   };
 
   private api!: NeteaseApi;

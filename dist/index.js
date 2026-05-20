@@ -93,8 +93,19 @@ var NeteaseConnector = class {
       id: "netease-cloud-music",
       name: "\u7F51\u6613\u4E91\u97F3\u4E50",
       description: "NetEase Cloud Music data source connector",
-      version: "0.1.0",
-      capabilities: ["search", "stream", "lyrics"]
+      version: "0.2.0",
+      capabilities: ["search", "stream", "lyrics"],
+      configSchema: [
+        {
+          key: "apiBaseUrl",
+          label: "API \u7AEF\u70B9",
+          type: "url",
+          required: false,
+          default: "https://netease-cloud-music-api-theta-ten.vercel.app",
+          placeholder: "https://your-netease-api.example.com",
+          help: "\u81EA\u90E8\u7F72 NeteaseCloudMusicApi \u5730\u5740\u3002\u7559\u7A7A\u4F7F\u7528\u516C\u5F00\u4EE3\u7406\uFF08\u6709\u9650\u989D\uFF09\u3002"
+        }
+      ]
     };
   }
   async init(config) {
