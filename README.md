@@ -2,6 +2,8 @@
 
 NetEase Cloud Music (网易云音乐) connector for [DancingMusic](https://github.com/DancingMusic/DancingMusic).
 
+🔗 **Live demo:** [https://dancingmusic.github.io/MusicConnect-NetEase/](https://dancingmusic.github.io/MusicConnect-NetEase/) — search + play table built from this connector's own `dist/index.js`.
+
 Backed by [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi). Defaults to the public deployment at `https://netease-cloud-music-api-theta-ten.vercel.app` — pass your own via the `apiBaseUrl` config field for higher quotas / unlocked tracks.
 
 ## Use in DancingMusic
