@@ -40,11 +40,12 @@ var NeteaseApi = class {
   async lyric(id) {
     return this.request("/lyric", { id });
   }
-  async topPlaylist(cat = "\u5168\u90E8", page = 1, pageSize = 30) {
+  async topPlaylist(cat = "\u5168\u90E8", page = 1, pageSize = 30, order = "hot") {
     return this.request("/top/playlist", {
       cat,
       limit: pageSize,
-      offset: (page - 1) * pageSize
+      offset: (page - 1) * pageSize,
+      order
     });
   }
   async playlistTrackAll(id, page = 1, pageSize = 30) {
@@ -197,7 +198,8 @@ var NeteaseConnector = class {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 30;
     const cat = query.category || "\u5168\u90E8";
-    const res = await this.api.topPlaylist(cat, page, pageSize);
+    const order = query.sort === "new" ? "new" : "hot";
+    const res = await this.api.topPlaylist(cat, page, pageSize, order);
     if (res.code !== 200 || !res.playlists) {
       return { playlists: [], total: 0, page, pageSize };
     }

@@ -82,11 +82,12 @@ export class NeteaseApi {
     return this.request<NeteaseLyricResponse>("/lyric", { id });
   }
 
-  async topPlaylist(cat = "全部", page = 1, pageSize = 30): Promise<NeteasePlaylistListResponse> {
+  async topPlaylist(cat = "全部", page = 1, pageSize = 30, order: "hot" | "new" = "hot"): Promise<NeteasePlaylistListResponse> {
     return this.request<NeteasePlaylistListResponse>("/top/playlist", {
       cat,
       limit: pageSize,
       offset: (page - 1) * pageSize,
+      order,
     });
   }
 

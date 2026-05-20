@@ -114,6 +114,21 @@ describe("NeteaseConnector (contract)", () => {
     expect(p.externalUrl).toContain("music.163.com");
   });
 
+  it("listPlaylists forwards sort param to upstream order=new", async () => {
+    let sawOrder = "";
+    mockFetch((url) => {
+      const m = url.match(/[?&]order=([^&]+)/);
+      if (m) sawOrder = m[1];
+      return { code: 200, total: 0, playlists: [] };
+    });
+    const c = new NeteaseConnector();
+    await c.init({ apiBaseUrl: BASE });
+    await c.listPlaylists!({ sort: "new" });
+    expect(sawOrder).toBe("new");
+    await c.listPlaylists!({ sort: "hot" });
+    expect(sawOrder).toBe("hot");
+  });
+
   it("getPlaylistTracks returns the playlist's songs", async () => {
     mockFetch((url) => {
       expect(url).toContain("/playlist/track/all");

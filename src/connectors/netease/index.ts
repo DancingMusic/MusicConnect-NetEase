@@ -149,7 +149,9 @@ export class NeteaseConnector implements MusicConnector {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 30;
     const cat = query.category || "全部";
-    const res = await this.api.topPlaylist(cat, page, pageSize);
+    // NetEase supports `hot` (default) and `new`. Treat `trending` as hot.
+    const order: "hot" | "new" = query.sort === "new" ? "new" : "hot";
+    const res = await this.api.topPlaylist(cat, page, pageSize, order);
     if (res.code !== 200 || !res.playlists) {
       return { playlists: [], total: 0, page, pageSize };
     }
