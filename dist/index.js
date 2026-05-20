@@ -118,7 +118,7 @@ var NeteaseConnector = class {
       id: "netease-cloud-music",
       name: "\u7F51\u6613\u4E91\u97F3\u4E50",
       description: "NetEase Cloud Music data source connector",
-      version: "0.3.0",
+      version: "0.2.0",
       capabilities: ["search", "stream", "lyrics", "playlist"],
       configSchema: [
         {
