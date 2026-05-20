@@ -81,4 +81,40 @@ export class NeteaseApi {
   async lyric(id: number): Promise<NeteaseLyricResponse> {
     return this.request<NeteaseLyricResponse>("/lyric", { id });
   }
+
+  async topPlaylist(cat = "全部", page = 1, pageSize = 30): Promise<NeteasePlaylistListResponse> {
+    return this.request<NeteasePlaylistListResponse>("/top/playlist", {
+      cat,
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+    });
+  }
+
+  async playlistTrackAll(id: number, page = 1, pageSize = 30): Promise<NeteasePlaylistTracksResponse> {
+    return this.request<NeteasePlaylistTracksResponse>("/playlist/track/all", {
+      id,
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+    });
+  }
+}
+
+export interface NeteasePlaylist {
+  id: number;
+  name: string;
+  description?: string;
+  coverImgUrl?: string;
+  trackCount?: number;
+  creator?: { nickname?: string };
+}
+
+export interface NeteasePlaylistListResponse {
+  code: number;
+  total: number;
+  playlists: NeteasePlaylist[];
+}
+
+export interface NeteasePlaylistTracksResponse {
+  code: number;
+  songs?: NeteaseSong[];
 }

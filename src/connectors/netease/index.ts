@@ -6,10 +6,25 @@ import type {
   MusicLyrics,
   MusicListQuery,
   MusicTrack,
+  MusicPlaylist,
+  MusicPlaylistList,
+  MusicPlaylistQuery,
 } from "@dancingmusic/music-store";
 import { NeteaseApi } from "./api";
-import type { NeteaseSong } from "./api";
+import type { NeteaseSong, NeteasePlaylist } from "./api";
 import { parseLrc, mergeLyrics } from "./lyrics-parser";
+
+function toMusicPlaylist(p: NeteasePlaylist): MusicPlaylist {
+  return {
+    id: `netease-playlist:${p.id}`,
+    name: p.name,
+    description: p.description,
+    coverUrl: p.coverImgUrl,
+    trackCount: p.trackCount,
+    curator: p.creator?.nickname,
+    externalUrl: `https://music.163.com/#/playlist?id=${p.id}`,
+  };
+}
 
 export interface NeteaseConnectorConfig {
   apiBaseUrl?: string;
@@ -36,8 +51,8 @@ export class NeteaseConnector implements MusicConnector {
     id: "netease-cloud-music",
     name: "网易云音乐",
     description: "NetEase Cloud Music data source connector",
-    version: "0.2.0",
-    capabilities: ["search", "stream", "lyrics"],
+    version: "0.3.0",
+    capabilities: ["search", "stream", "lyrics", "playlist"],
     configSchema: [
       {
         key: "apiBaseUrl",
@@ -130,8 +145,50 @@ export class NeteaseConnector implements MusicConnector {
     };
   }
 
+  async listPlaylists(query: MusicPlaylistQuery = {}): Promise<MusicPlaylistList> {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 30;
+    const cat = query.category || "全部";
+    const res = await this.api.topPlaylist(cat, page, pageSize);
+    if (res.code !== 200 || !res.playlists) {
+      return { playlists: [], total: 0, page, pageSize };
+    }
+    return {
+      playlists: res.playlists.map(toMusicPlaylist),
+      total: res.total ?? res.playlists.length,
+      page,
+      pageSize,
+    };
+  }
+
+  async getPlaylistTracks(
+    playlistId: string,
+    opts: { page?: number; pageSize?: number } = {},
+  ): Promise<MusicSearchResult> {
+    const id = this.parsePlaylistId(playlistId);
+    const page = opts.page ?? 1;
+    const pageSize = opts.pageSize ?? 30;
+    if (!id) return { tracks: [], total: 0, page, pageSize };
+    const res = await this.api.playlistTrackAll(id, page, pageSize);
+    if (res.code !== 200 || !res.songs) {
+      return { tracks: [], total: 0, page, pageSize };
+    }
+    return {
+      tracks: res.songs.map(toMusicTrack),
+      total: res.songs.length, // upstream doesn't return total, so report what we got
+      page,
+      pageSize,
+    };
+  }
+
   private parseId(trackId: string): number | null {
     const raw = trackId.startsWith("netease:") ? trackId.slice(8) : trackId;
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) ? n : null;
+  }
+
+  private parsePlaylistId(id: string): number | null {
+    const raw = id.startsWith("netease-playlist:") ? id.slice("netease-playlist:".length) : id;
     const n = parseInt(raw, 10);
     return Number.isFinite(n) ? n : null;
   }

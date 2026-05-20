@@ -40,6 +40,20 @@ var NeteaseApi = class {
   async lyric(id) {
     return this.request("/lyric", { id });
   }
+  async topPlaylist(cat = "\u5168\u90E8", page = 1, pageSize = 30) {
+    return this.request("/top/playlist", {
+      cat,
+      limit: pageSize,
+      offset: (page - 1) * pageSize
+    });
+  }
+  async playlistTrackAll(id, page = 1, pageSize = 30) {
+    return this.request("/playlist/track/all", {
+      id,
+      limit: pageSize,
+      offset: (page - 1) * pageSize
+    });
+  }
 };
 
 // src/connectors/netease/lyrics-parser.ts
@@ -72,6 +86,17 @@ function mergeLyrics(original, translated) {
 }
 
 // src/connectors/netease/index.ts
+function toMusicPlaylist(p) {
+  return {
+    id: `netease-playlist:${p.id}`,
+    name: p.name,
+    description: p.description,
+    coverUrl: p.coverImgUrl,
+    trackCount: p.trackCount,
+    curator: p.creator?.nickname,
+    externalUrl: `https://music.163.com/#/playlist?id=${p.id}`
+  };
+}
 function toMusicTrack(song) {
   return {
     id: `netease:${song.id}`,
@@ -93,8 +118,8 @@ var NeteaseConnector = class {
       id: "netease-cloud-music",
       name: "\u7F51\u6613\u4E91\u97F3\u4E50",
       description: "NetEase Cloud Music data source connector",
-      version: "0.2.0",
-      capabilities: ["search", "stream", "lyrics"],
+      version: "0.3.0",
+      capabilities: ["search", "stream", "lyrics", "playlist"],
       configSchema: [
         {
           key: "apiBaseUrl",
@@ -168,8 +193,45 @@ var NeteaseConnector = class {
       timeline
     };
   }
+  async listPlaylists(query = {}) {
+    const page = query.page ?? 1;
+    const pageSize = query.pageSize ?? 30;
+    const cat = query.category || "\u5168\u90E8";
+    const res = await this.api.topPlaylist(cat, page, pageSize);
+    if (res.code !== 200 || !res.playlists) {
+      return { playlists: [], total: 0, page, pageSize };
+    }
+    return {
+      playlists: res.playlists.map(toMusicPlaylist),
+      total: res.total ?? res.playlists.length,
+      page,
+      pageSize
+    };
+  }
+  async getPlaylistTracks(playlistId, opts = {}) {
+    const id = this.parsePlaylistId(playlistId);
+    const page = opts.page ?? 1;
+    const pageSize = opts.pageSize ?? 30;
+    if (!id) return { tracks: [], total: 0, page, pageSize };
+    const res = await this.api.playlistTrackAll(id, page, pageSize);
+    if (res.code !== 200 || !res.songs) {
+      return { tracks: [], total: 0, page, pageSize };
+    }
+    return {
+      tracks: res.songs.map(toMusicTrack),
+      total: res.songs.length,
+      // upstream doesn't return total, so report what we got
+      page,
+      pageSize
+    };
+  }
   parseId(trackId) {
     const raw = trackId.startsWith("netease:") ? trackId.slice(8) : trackId;
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) ? n : null;
+  }
+  parsePlaylistId(id) {
+    const raw = id.startsWith("netease-playlist:") ? id.slice("netease-playlist:".length) : id;
     const n = parseInt(raw, 10);
     return Number.isFinite(n) ? n : null;
   }
