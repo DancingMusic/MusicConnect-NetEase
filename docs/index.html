@@ -82,7 +82,7 @@
   <script type="module">
     // The page loads the same dist/index.js that the host app uses, so what
     // you see here is exactly what users will see in DancingMusic.
-    import Connector from '../dist/index.js';
+    import Connector from 'https://cdn.jsdelivr.net/gh/DancingMusic/MusicConnect-NetEase@main/dist/index.js';
 
     const DEFAULT_CONFIG = { apiBaseUrl: "https://netease-cloud-music-api-theta-ten.vercel.app" };
     const FALLBACK = (id) => { const raw = id.includes(":") ? id.split(":").pop() : id; return /^\d+$/.test(raw) ? `https://music.163.com/song/media/outer/url?id=${raw}.mp3` : null; };
