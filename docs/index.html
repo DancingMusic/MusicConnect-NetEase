@@ -157,7 +157,7 @@
 <body>
   <div class="wrap">
     <h1>网易云音乐</h1>
-    <p class="desc">NetEase Cloud Music — 经过 NeteaseCloudMusicApi 公开代理访问</p>
+    <p class="desc">NetEase Cloud Music — 官方网页登录优先，搜索通过 NeteaseCloudMusicApi 访问</p>
     <p class="meta">
       数据源仓库: <code>DancingMusic/MusicConnect-NetEase</code> ·
       版本: <code id="version">loading…</code> ·
@@ -173,7 +173,7 @@
       <div class="login-head">
         <div>
           <div class="login-title">账号登录</div>
-          <p class="login-copy">通过连接器自己的 <code>login(request)</code> 返回二维码、网页或手动输入动作；成功后本页只保存连接器返回的配置补丁。</p>
+          <p class="login-copy">DancingMusic 桌面端会在播放器内打开官方登录窗口并自动保存 cookie；本网页 demo 只能展示相同入口和 iframe 兜底。</p>
         </div>
         <div class="login-controls">
           <button id="loginStatusBtn" type="button">刷新状态</button>
@@ -185,11 +185,11 @@
       <div id="loginStatus" class="login-status">登录状态初始化中…</div>
       <div id="loginActions" class="login-actions"></div>
       <details class="config-box" id="configBox">
-        <summary>连接器配置</summary>
+        <summary>高级设置</summary>
         <div id="configFields"></div>
         <div class="config-actions">
-          <button id="configSaveBtn" type="button">保存配置并重载</button>
-          <button id="configResetBtn" type="button">清除本页配置</button>
+          <button id="configSaveBtn" type="button">保存高级设置并重载</button>
+          <button id="configResetBtn" type="button">清除本页高级设置</button>
         </div>
       </details>
     </section>
@@ -443,7 +443,10 @@
           card.innerHTML = '<strong>' + title + '</strong>' + message + qrImage + qrUrl;
         } else if (action.type === 'open-url') {
           const url = action.url || action.qrUrl || '';
-          card.innerHTML = '<strong>' + title + '</strong>' + message
+          const capture = action.cookieCapture?.message
+            ? '<p>' + esc(action.cookieCapture.message) + '</p>'
+            : '';
+          card.innerHTML = '<strong>' + title + '</strong>' + message + capture
             + '<button type="button" data-open-login-url="' + esc(url) + '">在页面内打开</button> '
             + '<a href="' + esc(url) + '" target="_blank" rel="noreferrer">外部打开</a>';
         } else if (action.type === 'manual-input') {

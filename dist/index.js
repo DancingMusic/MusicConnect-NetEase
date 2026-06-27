@@ -114,6 +114,20 @@ function mergeLyrics(original, translated) {
 }
 
 // src/connectors/netease/index.ts
+var NETEASE_WEB_COOKIE_FLOW_ID = "netease-web-cookie";
+var NETEASE_LOGIN_URL = "https://music.163.com/#/login";
+var NETEASE_COOKIE_PRIORITY = [
+  "MUSIC_U",
+  "__csrf",
+  "NMTID",
+  "MUSIC_A",
+  "__remember_me",
+  "_ntes_nuid",
+  "_ntes_nnid",
+  "WEVNSM",
+  "WNMCID",
+  "JSESSIONID-WYYY"
+];
 function toMusicPlaylist(p) {
   return {
     id: `netease-playlist:${p.id}`,
@@ -140,13 +154,22 @@ function toMusicTrack(song) {
     updatedAt: ""
   };
 }
+function firstString(...values) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value;
+  }
+  return void 0;
+}
+function cookieHasNeteaseLogin(cookie) {
+  return /(?:^|;\s*)MUSIC_U=/.test(cookie);
+}
 var NeteaseConnector = class {
   constructor() {
     this.meta = {
       id: "netease-cloud-music",
       name: "\u7F51\u6613\u4E91\u97F3\u4E50",
-      description: "NetEase Cloud Music data source connector with QR login",
-      version: "0.4.0",
+      description: "NetEase Cloud Music data source connector with official web login",
+      version: "0.5.0",
       capabilities: ["search", "stream", "lyrics", "playlist", "login"],
       configSchema: [
         {
@@ -156,7 +179,7 @@ var NeteaseConnector = class {
           required: false,
           default: "https://netease-cloud-music-api-theta-ten.vercel.app",
           placeholder: "https://your-netease-api.example.com",
-          help: "\u81EA\u90E8\u7F72 NeteaseCloudMusicApi \u5730\u5740\u3002\u7559\u7A7A\u4F7F\u7528\u516C\u5F00\u4EE3\u7406\uFF08\u6709\u9650\u989D\uFF09\u3002"
+          help: "\u9AD8\u7EA7\u8BBE\u7F6E\uFF1A\u81EA\u90E8\u7F72 NeteaseCloudMusicApi \u5730\u5740\u3002\u7559\u7A7A\u4F7F\u7528\u516C\u5F00\u4EE3\u7406\uFF08\u6709\u9650\u989D\uFF09\u3002"
         },
         {
           key: "cookie",
@@ -164,7 +187,7 @@ var NeteaseConnector = class {
           type: "password",
           required: false,
           placeholder: "MUSIC_U=...",
-          help: "\u626B\u7801\u767B\u5F55\u540E\u81EA\u52A8\u4FDD\u5B58\u3002\u4E5F\u53EF\u4EE5\u7C98\u8D34 NeteaseCloudMusicApi \u517C\u5BB9 cookie\u3002"
+          help: "\u5B98\u65B9\u7F51\u9875\u767B\u5F55\u6216\u626B\u7801\u767B\u5F55\u540E\u81EA\u52A8\u4FDD\u5B58\u3002\u666E\u901A\u7528\u6237\u4E0D\u9700\u8981\u624B\u52A8\u7C98\u8D34\u3002"
         }
       ]
     };
@@ -198,10 +221,48 @@ var NeteaseConnector = class {
       return { status: "anonymous", message: "\u5DF2\u53D6\u6D88\u7F51\u6613\u4E91\u97F3\u4E50\u767B\u5F55" };
     }
     if (intent === "continue") {
+      const capturedCookie = firstString(request.input?.cookie, request.input?.authCookie);
+      if (capturedCookie) return this.acceptWebCookie(capturedCookie);
+      if (request.flowId === NETEASE_WEB_COOKIE_FLOW_ID) return this.startWebLogin("\u8BF7\u7EE7\u7EED\u5728\u7F51\u6613\u4E91\u5B98\u65B9\u767B\u5F55\u7A97\u53E3\u5B8C\u6210\u767B\u5F55");
       if (!request.flowId) return { status: "error", message: "\u7F3A\u5C11\u7F51\u6613\u4E91\u767B\u5F55 flowId" };
       return this.continueQrLogin(request.flowId);
     }
-    return this.startQrLogin();
+    return this.startWebLogin();
+  }
+  startWebLogin(message = "\u5728\u7F51\u6613\u4E91\u5B98\u65B9\u9875\u9762\u5B8C\u6210\u767B\u5F55\u540E\uFF0CDancingMusic \u4F1A\u81EA\u52A8\u4FDD\u5B58\u5F53\u524D\u8D26\u53F7\u4F1A\u8BDD\u3002") {
+    return {
+      status: "pending",
+      flow: "browser",
+      flowId: NETEASE_WEB_COOKIE_FLOW_ID,
+      actions: [{
+        type: "open-url",
+        label: "\u6253\u5F00\u7F51\u6613\u4E91\u5B98\u65B9\u767B\u5F55\u7A97\u53E3",
+        url: NETEASE_LOGIN_URL,
+        cookieCapture: {
+          provider: "netease",
+          title: "\u7F51\u6613\u4E91\u97F3\u4E50\u767B\u5F55",
+          domains: ["163.com", "music.163.com", "netease.com"],
+          requiredCookieNames: ["MUSIC_U"],
+          cookieNames: NETEASE_COOKIE_PRIORITY,
+          message: "\u684C\u9762\u7AEF\u4F1A\u5728\u64AD\u653E\u5668\u5185\u6253\u5F00\u7F51\u6613\u4E91\u5B98\u65B9\u767B\u5F55\u9875\uFF0C\u5E76\u81EA\u52A8\u8BFB\u53D6 MUSIC_U cookie\u3002"
+        },
+        message
+      }],
+      nextPollMs: 4e3,
+      message
+    };
+  }
+  acceptWebCookie(cookie) {
+    if (!cookieHasNeteaseLogin(cookie)) {
+      return { status: "error", message: "\u672A\u8BFB\u53D6\u5230\u7F51\u6613\u4E91 MUSIC_U\uFF0C\u4F1A\u8BDD\u65E0\u6548" };
+    }
+    this.cookie = cookie;
+    this.api = new NeteaseApi(this.apiBaseUrl, this.cookie);
+    return {
+      status: "authenticated",
+      message: "\u7F51\u6613\u4E91\u97F3\u4E50\u767B\u5F55\u6210\u529F",
+      configPatch: { cookie }
+    };
   }
   async startQrLogin() {
     const keyRes = await this.api.loginQrKey();

@@ -4,18 +4,18 @@ NetEase Cloud Music (网易云音乐) connector for [DancingMusic](https://githu
 
 🔗 **Live demo:** [https://dancingmusic.github.io/MusicConnect-NetEase/](https://dancingmusic.github.io/MusicConnect-NetEase/) — search + play table built from this connector's own `dist/index.js`.
 
-Backed by [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi). Defaults to the public deployment at `https://netease-cloud-music-api-theta-ten.vercel.app` — pass your own via the `apiBaseUrl` config field for higher quotas / unlocked tracks.
+Backed by [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi). Defaults to the public deployment at `https://netease-cloud-music-api-theta-ten.vercel.app`. Account login uses the official NetEase web page in the DancingMusic desktop login window and saves the returned `MUSIC_U` cookie automatically.
 
 ## Use in DancingMusic
 
-This connector is auto-loaded as the default data source. To add an extra instance pointing at your own proxy:
+This connector is auto-loaded as the default data source.
 
 1. Open the music store → connector switcher (top-right) → **添加连接器** → **GitHub** tab → paste:
    ```
    https://github.com/DancingMusic/MusicConnect-NetEase
    ```
-2. After it loads, click the gear icon on the new connector to set `apiBaseUrl`.
-3. Use the connector login action to scan the NetEase QR code. The returned `MUSIC_U` cookie is saved as the connector's `cookie` config.
+2. Click **登录** and finish login in the official NetEase page shown inside DancingMusic.
+3. Advanced only: click **高级设置** to override `apiBaseUrl` with your own NeteaseCloudMusicApi deployment.
 
 ## Track ID format
 
@@ -31,9 +31,8 @@ NetEase locks most paid tracks behind login cookies. When the proxy can't return
 - `GET /song/detail` — track detail
 - `GET /song/url/v1` — stream URL
 - `GET /lyric` — lyrics
-- `GET /login/qr/key` — QR login key
-- `GET /login/qr/create` — QR image
-- `GET /login/qr/check` — QR login polling
+- Official web login at `https://music.163.com/#/login` — desktop cookie capture
+- `GET /login/qr/key` / `GET /login/qr/create` / `GET /login/qr/check` — legacy proxy QR fallback
 - `GET /logout` — clear server session when supported by the proxy
 
 ## License
@@ -46,7 +45,7 @@ This repo uses an auto-release workflow ([`.github/workflows/release.yml`](.gith
 
 **Pin to a specific version** (recommended for production):
 ```
-https://cdn.jsdelivr.net/gh/DancingMusic/MusicConnect-NetEase@v0.4.0/dist/index.js
+https://cdn.jsdelivr.net/gh/DancingMusic/MusicConnect-NetEase@v0.5.0/dist/index.js
 ```
 
 **Always-latest** (handy for dev, but jsdelivr caches `@main` for up to a week):

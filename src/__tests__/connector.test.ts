@@ -152,20 +152,9 @@ describe("NeteaseConnector (contract)", () => {
     expect(r.tracks[0].id).toBe("netease:12345");
   });
 
-  it("supports QR login and persists the returned cookie patch", async () => {
+  it("supports official web login and persists the returned cookie patch", async () => {
     let sawCookie = false;
     mockFetch((url) => {
-      if (url.includes("/login/qr/key")) {
-        return { code: 200, data: { unikey: "qr-key" } };
-      }
-      if (url.includes("/login/qr/create")) {
-        expect(url).toContain("key=qr-key");
-        return { code: 200, data: { qrurl: "https://qr.test/login", qrimg: "data:image/png;base64,abc" } };
-      }
-      if (url.includes("/login/qr/check")) {
-        expect(url).toContain("key=qr-key");
-        return { code: 803, cookie: "MUSIC_U=token", nickname: "tester" };
-      }
       if (url.includes("/cloudsearch")) {
         sawCookie = url.includes("cookie=MUSIC_U%3Dtoken");
         return { code: 200, result: { songCount: 0, songs: [] } };
@@ -176,11 +165,16 @@ describe("NeteaseConnector (contract)", () => {
     const c = new NeteaseConnector();
     await c.init({ apiBaseUrl: BASE });
     const start = await c.login({ intent: "start" });
-    expect(start.flow).toBe("qr");
-    expect(start.flowId).toBe("qr-key");
-    expect(start.actions?.[0]?.imageUrl).toContain("data:image/png");
+    expect(start.flow).toBe("browser");
+    expect(start.flowId).toBe("netease-web-cookie");
+    expect(start.actions?.[0]?.type).toBe("open-url");
+    expect(start.actions?.[0]?.cookieCapture?.provider).toBe("netease");
 
-    const done = await c.login({ intent: "continue", flowId: "qr-key" });
+    const done = await c.login({
+      intent: "continue",
+      flowId: "netease-web-cookie",
+      input: { cookie: "MUSIC_U=token" },
+    });
     expect(done.status).toBe("authenticated");
     expect(done.configPatch).toEqual({ cookie: "MUSIC_U=token" });
 
