@@ -9,6 +9,8 @@ import type {
   MusicPlaylist,
   MusicPlaylistList,
   MusicPlaylistQuery,
+  MusicConnectorLoginRequest,
+  MusicConnectorLoginResult,
 } from "@dancingmusic/music-store";
 import { NeteaseApi } from "./api";
 import type { NeteaseSong, NeteasePlaylist } from "./api";
@@ -28,6 +30,7 @@ function toMusicPlaylist(p: NeteasePlaylist): MusicPlaylist {
 
 export interface NeteaseConnectorConfig {
   apiBaseUrl?: string;
+  cookie?: string;
 }
 
 function toMusicTrack(song: NeteaseSong): MusicTrack {
@@ -50,9 +53,9 @@ export class NeteaseConnector implements MusicConnector {
   readonly meta: MusicConnectorMeta = {
     id: "netease-cloud-music",
     name: "网易云音乐",
-    description: "NetEase Cloud Music data source connector",
-    version: "0.2.0",
-    capabilities: ["search", "stream", "lyrics", "playlist"],
+    description: "NetEase Cloud Music data source connector with QR login",
+    version: "0.4.0",
+    capabilities: ["search", "stream", "lyrics", "playlist", "login"],
     configSchema: [
       {
         key: "apiBaseUrl",
@@ -63,14 +66,110 @@ export class NeteaseConnector implements MusicConnector {
         placeholder: "https://your-netease-api.example.com",
         help: "自部署 NeteaseCloudMusicApi 地址。留空使用公开代理（有限额）。",
       },
+      {
+        key: "cookie",
+        label: "网易云登录 Cookie",
+        type: "password",
+        required: false,
+        placeholder: "MUSIC_U=...",
+        help: "扫码登录后自动保存。也可以粘贴 NeteaseCloudMusicApi 兼容 cookie。",
+      },
     ],
   };
 
   private api!: NeteaseApi;
+  private apiBaseUrl: string | undefined;
+  private cookie = "";
 
   async init(config?: Record<string, unknown>): Promise<void> {
     const typed = config as NeteaseConnectorConfig | undefined;
-    this.api = new NeteaseApi(typed?.apiBaseUrl);
+    this.apiBaseUrl = typeof typed?.apiBaseUrl === "string" ? typed.apiBaseUrl : undefined;
+    this.cookie = typeof typed?.cookie === "string" ? typed.cookie : "";
+    this.api = new NeteaseApi(this.apiBaseUrl, this.cookie);
+  }
+
+  async login(request: MusicConnectorLoginRequest = { intent: "status" }): Promise<MusicConnectorLoginResult> {
+    const intent = request.intent ?? "status";
+    if (intent === "status") {
+      return this.cookie
+        ? { status: "authenticated", message: "网易云音乐账号会话已配置" }
+        : { status: "anonymous", message: "未登录网易云音乐" };
+    }
+    if (intent === "logout") {
+      try {
+        if (this.cookie) await this.api.logout();
+      } finally {
+        this.cookie = "";
+        this.api = new NeteaseApi(this.apiBaseUrl);
+      }
+      return {
+        status: "anonymous",
+        message: "已退出网易云音乐账号",
+        configPatch: { cookie: "" },
+      };
+    }
+    if (intent === "cancel") {
+      return { status: "anonymous", message: "已取消网易云音乐登录" };
+    }
+    if (intent === "continue") {
+      if (!request.flowId) return { status: "error", message: "缺少网易云登录 flowId" };
+      return this.continueQrLogin(request.flowId);
+    }
+    return this.startQrLogin();
+  }
+
+  private async startQrLogin(): Promise<MusicConnectorLoginResult> {
+    const keyRes = await this.api.loginQrKey();
+    const key = keyRes.data?.unikey;
+    if (keyRes.code !== 200 || !key) {
+      throw new Error("网易云二维码登录 key 获取失败");
+    }
+    const qrRes = await this.api.loginQrCreate(key);
+    if (qrRes.code !== 200 || (!qrRes.data?.qrimg && !qrRes.data?.qrurl)) {
+      throw new Error("网易云二维码生成失败");
+    }
+    return {
+      status: "pending",
+      flow: "qr",
+      flowId: key,
+      actions: [{
+        type: "qr",
+        label: "网易云音乐扫码登录",
+        qrUrl: qrRes.data.qrurl,
+        imageUrl: qrRes.data.qrimg,
+        message: "使用网易云音乐 App 扫码确认",
+      }],
+      expiresAt: Date.now() + 3 * 60 * 1000,
+      nextPollMs: 2500,
+      message: "使用网易云音乐 App 扫码确认",
+    };
+  }
+
+  private async continueQrLogin(flowId: string): Promise<MusicConnectorLoginResult> {
+    const res = await this.api.loginQrCheck(flowId);
+    if (res.code === 803 && res.cookie) {
+      this.cookie = res.cookie;
+      this.api = new NeteaseApi(this.apiBaseUrl, this.cookie);
+      return {
+        status: "authenticated",
+        user: { name: res.nickname, avatarUrl: res.avatarUrl },
+        message: res.message || "网易云音乐登录成功",
+        configPatch: { cookie: res.cookie },
+      };
+    }
+    if (res.code === 800) {
+      return { status: "expired", message: res.message || "二维码已过期" };
+    }
+    if (res.code === 801 || res.code === 802) {
+      return {
+        status: "pending",
+        flow: "qr",
+        flowId,
+        message: res.message || "等待扫码确认",
+        nextPollMs: 2500,
+      };
+    }
+    return { status: "error", message: res.message || `网易云登录状态异常: ${res.code}` };
   }
 
   async search(query: MusicListQuery): Promise<MusicSearchResult> {

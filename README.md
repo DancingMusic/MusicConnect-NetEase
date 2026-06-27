@@ -15,6 +15,7 @@ This connector is auto-loaded as the default data source. To add an extra instan
    https://github.com/DancingMusic/MusicConnect-NetEase
    ```
 2. After it loads, click the gear icon on the new connector to set `apiBaseUrl`.
+3. Use the connector login action to scan the NetEase QR code. The returned `MUSIC_U` cookie is saved as the connector's `cookie` config.
 
 ## Track ID format
 
@@ -30,6 +31,10 @@ NetEase locks most paid tracks behind login cookies. When the proxy can't return
 - `GET /song/detail` — track detail
 - `GET /song/url/v1` — stream URL
 - `GET /lyric` — lyrics
+- `GET /login/qr/key` — QR login key
+- `GET /login/qr/create` — QR image
+- `GET /login/qr/check` — QR login polling
+- `GET /logout` — clear server session when supported by the proxy
 
 ## License
 
@@ -41,7 +46,7 @@ This repo uses an auto-release workflow ([`.github/workflows/release.yml`](.gith
 
 **Pin to a specific version** (recommended for production):
 ```
-https://cdn.jsdelivr.net/gh/DancingMusic/MusicConnect-NetEase@v0.1.1/dist/index.js
+https://cdn.jsdelivr.net/gh/DancingMusic/MusicConnect-NetEase@v0.4.0/dist/index.js
 ```
 
 **Always-latest** (handy for dev, but jsdelivr caches `@main` for up to a week):

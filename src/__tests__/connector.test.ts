@@ -21,7 +21,9 @@ describe("NeteaseConnector (contract)", () => {
     expect(c.meta.id).toBe("netease-cloud-music");
     expect(c.meta.capabilities).toContain("search");
     expect(c.meta.capabilities).toContain("stream");
+    expect(c.meta.capabilities).toContain("login");
     expect(c.meta.configSchema?.find(f => f.key === "apiBaseUrl")).toBeDefined();
+    expect(c.meta.configSchema?.find(f => f.key === "cookie")).toBeDefined();
   });
 
   it("search returns track-shaped results", async () => {
@@ -148,5 +150,41 @@ describe("NeteaseConnector (contract)", () => {
     const r = await c.getPlaylistTracks!("netease-playlist:991010");
     expect(r.tracks).toHaveLength(1);
     expect(r.tracks[0].id).toBe("netease:12345");
+  });
+
+  it("supports QR login and persists the returned cookie patch", async () => {
+    let sawCookie = false;
+    mockFetch((url) => {
+      if (url.includes("/login/qr/key")) {
+        return { code: 200, data: { unikey: "qr-key" } };
+      }
+      if (url.includes("/login/qr/create")) {
+        expect(url).toContain("key=qr-key");
+        return { code: 200, data: { qrurl: "https://qr.test/login", qrimg: "data:image/png;base64,abc" } };
+      }
+      if (url.includes("/login/qr/check")) {
+        expect(url).toContain("key=qr-key");
+        return { code: 803, cookie: "MUSIC_U=token", nickname: "tester" };
+      }
+      if (url.includes("/cloudsearch")) {
+        sawCookie = url.includes("cookie=MUSIC_U%3Dtoken");
+        return { code: 200, result: { songCount: 0, songs: [] } };
+      }
+      return { code: 200 };
+    });
+
+    const c = new NeteaseConnector();
+    await c.init({ apiBaseUrl: BASE });
+    const start = await c.login({ intent: "start" });
+    expect(start.flow).toBe("qr");
+    expect(start.flowId).toBe("qr-key");
+    expect(start.actions?.[0]?.imageUrl).toContain("data:image/png");
+
+    const done = await c.login({ intent: "continue", flowId: "qr-key" });
+    expect(done.status).toBe("authenticated");
+    expect(done.configPatch).toEqual({ cookie: "MUSIC_U=token" });
+
+    await c.search({ keyword: "周杰伦" });
+    expect(sawCookie).toBe(true);
   });
 });

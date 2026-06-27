@@ -1,6 +1,6 @@
 {
   "name": "@dancingmusic/music-connect-netease",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "NetEase Cloud Music connector for DancingMusic. Backed by a public NeteaseCloudMusicApi proxy.",
   "type": "module",
   "main": "./dist/index.js",
@@ -31,7 +31,7 @@
     "@dancingmusic/music-store": ">=0.1.0"
   },
   "devDependencies": {
-    "@dancingmusic/music-store": "file:/Users/wuguangliang/workspace/DancingMusicWorkspace/DancingMusic/.claude/worktrees/elastic-bhabha-ada1fe/submodules/MusicStore",
+    "@dancingmusic/music-store": "file:/Users/wuguangliang/workspace/DancingMusicWorkspace/DancingMusic/submodules/MusicStore",
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
     "vitest": "^2.0.0"
