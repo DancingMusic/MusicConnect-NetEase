@@ -1,6 +1,6 @@
 {
   "name": "@dancingmusic/music-connect-netease",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "NetEase Cloud Music connector for DancingMusic. Backed by a public NeteaseCloudMusicApi proxy.",
   "type": "module",
   "main": "./dist/index.js",

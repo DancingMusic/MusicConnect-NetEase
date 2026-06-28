@@ -80,7 +80,7 @@ export class NeteaseConnector implements MusicConnector {
     id: "netease-cloud-music",
     name: "网易云音乐",
     description: "NetEase Cloud Music data source connector with official web login",
-    version: "0.5.0",
+    version: "0.5.1",
     capabilities: ["search", "stream", "lyrics", "playlist", "login"],
     configSchema: [
       {
@@ -166,7 +166,6 @@ export class NeteaseConnector implements MusicConnector {
         },
         message,
       }],
-      nextPollMs: 4000,
       message,
     };
   }

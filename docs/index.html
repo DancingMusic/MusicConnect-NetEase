@@ -489,7 +489,8 @@
       loginContinueBtn.hidden = !(activeLoginFlowId && result?.status === 'pending');
       renderLoginActions(result?.actions || []);
       if (result?.configPatch) await applyConfigPatch(result.configPatch);
-      if (result?.status === 'pending' && result.flowId && result.nextPollMs) {
+      const shouldPoll = result?.flow === 'qr' || result?.flow === 'device-code';
+      if (result?.status === 'pending' && result.flowId && result.nextPollMs && shouldPoll) {
         activeLoginFlowId = result.flowId;
         loginPollTimer = window.setTimeout(() => callLogin('continue'), Math.max(1200, result.nextPollMs));
       }

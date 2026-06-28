@@ -169,6 +169,7 @@ describe("NeteaseConnector (contract)", () => {
     expect(start.flowId).toBe("netease-web-cookie");
     expect(start.actions?.[0]?.type).toBe("open-url");
     expect(start.actions?.[0]?.cookieCapture?.provider).toBe("netease");
+    expect(start.nextPollMs).toBeUndefined();
 
     const done = await c.login({
       intent: "continue",

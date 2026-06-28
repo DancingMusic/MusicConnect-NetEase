@@ -169,7 +169,7 @@ var NeteaseConnector = class {
       id: "netease-cloud-music",
       name: "\u7F51\u6613\u4E91\u97F3\u4E50",
       description: "NetEase Cloud Music data source connector with official web login",
-      version: "0.5.0",
+      version: "0.5.1",
       capabilities: ["search", "stream", "lyrics", "playlist", "login"],
       configSchema: [
         {
@@ -248,7 +248,6 @@ var NeteaseConnector = class {
         },
         message
       }],
-      nextPollMs: 4e3,
       message
     };
   }
