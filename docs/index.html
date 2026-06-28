@@ -485,8 +485,10 @@
       const user = result?.user?.name ? ' · ' + esc(result.user.name) : '';
       const message = result?.message ? ' · ' + esc(result.message) : '';
       loginStatusEl.innerHTML = '状态：<strong>' + esc(statusLabel) + '</strong>' + user + message;
-      activeLoginFlowId = result?.flowId || activeLoginFlowId || '';
-      loginContinueBtn.hidden = !(activeLoginFlowId && result?.status === 'pending');
+      const isPending = result?.status === 'pending';
+      const canCheckLogin = result?.flow === 'qr' || result?.flow === 'device-code';
+      activeLoginFlowId = isPending ? (result?.flowId || '') : '';
+      loginContinueBtn.hidden = !(activeLoginFlowId && canCheckLogin);
       renderLoginActions(result?.actions || []);
       if (result?.configPatch) await applyConfigPatch(result.configPatch);
       const shouldPoll = result?.flow === 'qr' || result?.flow === 'device-code';
