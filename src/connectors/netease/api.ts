@@ -32,24 +32,16 @@ export interface NeteaseLyricResponse {
   code: number;
 }
 
-const DEFAULT_BASE = "https://netease-cloud-music-api-theta-ten.vercel.app";
-
 export class NeteaseApi {
   private baseUrl: string;
-  private cookie: string;
-
-  constructor(baseUrl?: string, cookie = "") {
-    this.baseUrl = (baseUrl ?? DEFAULT_BASE).replace(/\/$/, "");
-    this.cookie = cookie;
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl.replace(/\/$/, "");
   }
 
   private async request<T>(path: string, params: Record<string, string | number> = {}): Promise<T> {
     const url = new URL(path, this.baseUrl);
     for (const [k, v] of Object.entries(params)) {
       url.searchParams.set(k, String(v));
-    }
-    if (this.cookie && !url.searchParams.has("cookie")) {
-      url.searchParams.set("cookie", this.cookie);
     }
     const res = await fetch(url.toString(), {
       headers: { "Content-Type": "application/json" },
@@ -104,32 +96,6 @@ export class NeteaseApi {
     });
   }
 
-  async loginQrKey(): Promise<NeteaseQrKeyResponse> {
-    return this.request<NeteaseQrKeyResponse>("/login/qr/key", {
-      timestamp: Date.now(),
-    });
-  }
-
-  async loginQrCreate(key: string): Promise<NeteaseQrCreateResponse> {
-    return this.request<NeteaseQrCreateResponse>("/login/qr/create", {
-      key,
-      qrimg: "true",
-      timestamp: Date.now(),
-    });
-  }
-
-  async loginQrCheck(key: string): Promise<NeteaseQrCheckResponse> {
-    return this.request<NeteaseQrCheckResponse>("/login/qr/check", {
-      key,
-      timestamp: Date.now(),
-    });
-  }
-
-  async logout(): Promise<{ code: number }> {
-    return this.request<{ code: number }>("/logout", {
-      timestamp: Date.now(),
-    });
-  }
 }
 
 export interface NeteasePlaylist {
@@ -150,25 +116,4 @@ export interface NeteasePlaylistListResponse {
 export interface NeteasePlaylistTracksResponse {
   code: number;
   songs?: NeteaseSong[];
-}
-
-export interface NeteaseQrKeyResponse {
-  code: number;
-  data?: { unikey?: string };
-}
-
-export interface NeteaseQrCreateResponse {
-  code: number;
-  data?: {
-    qrurl?: string;
-    qrimg?: string;
-  };
-}
-
-export interface NeteaseQrCheckResponse {
-  code: number;
-  message?: string;
-  cookie?: string;
-  avatarUrl?: string;
-  nickname?: string;
 }

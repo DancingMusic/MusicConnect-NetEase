@@ -1,4 +1,4 @@
-import type { LyricLine } from "@dancingmusic/music-store";
+import type { LyricLine } from "@dancingmusic/music-connect";
 
 export function parseLrc(lrcText: string): LyricLine[] {
   const lines: LyricLine[] = [];

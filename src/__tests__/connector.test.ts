@@ -21,9 +21,16 @@ describe("NeteaseConnector (contract)", () => {
     expect(c.meta.id).toBe("netease-cloud-music");
     expect(c.meta.capabilities).toContain("search");
     expect(c.meta.capabilities).toContain("stream");
-    expect(c.meta.capabilities).toContain("login");
-    expect(c.meta.configSchema?.find(f => f.key === "apiBaseUrl")).toBeDefined();
-    expect(c.meta.configSchema?.find(f => f.key === "cookie")).toBeDefined();
+    expect(c.meta.capabilities).not.toContain("login");
+    expect(c.meta.variant).toBe("anonymous");
+    expect(c.meta.configSchema?.find(f => f.key === "apiBaseUrl")?.required).toBe(true);
+    expect(c.meta.configSchema?.find(f => f.key === "cookie")).toBeUndefined();
+  });
+
+  it("does not bind to an unowned public proxy by default", async () => {
+    const c = new NeteaseConnector();
+    await c.init();
+    expect(await c.search({ keyword: "周杰伦" })).toEqual({ tracks: [], total: 0, page: 1, pageSize: 20 });
   });
 
   it("search returns track-shaped results", async () => {
@@ -152,7 +159,7 @@ describe("NeteaseConnector (contract)", () => {
     expect(r.tracks[0].id).toBe("netease:12345");
   });
 
-  it("supports official web login and persists the returned cookie patch", async () => {
+  it("ignores legacy cookie config and never sends it to a configurable catalog proxy", async () => {
     let sawCookie = false;
     mockFetch((url) => {
       if (url.includes("/cloudsearch")) {
@@ -163,23 +170,9 @@ describe("NeteaseConnector (contract)", () => {
     });
 
     const c = new NeteaseConnector();
-    await c.init({ apiBaseUrl: BASE });
-    const start = await c.login({ intent: "start" });
-    expect(start.flow).toBe("browser");
-    expect(start.flowId).toBe("netease-web-cookie");
-    expect(start.actions?.[0]?.type).toBe("open-url");
-    expect(start.actions?.[0]?.cookieCapture?.provider).toBe("netease");
-    expect(start.nextPollMs).toBeUndefined();
-
-    const done = await c.login({
-      intent: "continue",
-      flowId: "netease-web-cookie",
-      input: { cookie: "MUSIC_U=token" },
-    });
-    expect(done.status).toBe("authenticated");
-    expect(done.configPatch).toEqual({ cookie: "MUSIC_U=token" });
-
+    await c.init({ apiBaseUrl: BASE, cookie: "MUSIC_U=token" });
+    expect(c.login).toBeUndefined();
     await c.search({ keyword: "周杰伦" });
-    expect(sawCookie).toBe(true);
+    expect(sawCookie).toBe(false);
   });
 });

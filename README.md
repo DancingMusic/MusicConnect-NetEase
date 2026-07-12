@@ -1,62 +1,53 @@
-# @dancingmusic/music-connect-netease
+# MusicConnect-NetEase
 
-NetEase Cloud Music (网易云音乐) connector for [DancingMusic](https://github.com/DancingMusic/DancingMusic).
+网易云音乐的 DancingMusic **匿名连接器实现**。
 
-🔗 **Live demo:** [https://dancingmusic.github.io/MusicConnect-NetEase/](https://dancingmusic.github.io/MusicConnect-NetEase/) — search + play table built from this connector's own `dist/index.js`.
+- 实现 ID：`netease-cloud-music`
+- 家族 ID：`netease-cloud-music`
+- 变体：`anonymous`
+- 登录要求：`none`
+- 能力：搜索、歌曲信息、可用时的播放地址、歌词、歌单
+- 主机：Web、Desktop
 
-Backed by [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi). Defaults to the public deployment at `https://netease-cloud-music-api-theta-ten.vercel.app`. Account login uses the official NetEase web page in the DancingMusic desktop login window and saves the returned `MUSIC_U` cookie automatically.
+## 为什么不内置公共代理
 
-## Use in DancingMusic
+社区项目 [Binaryify/NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi) 已停止维护，公共部署也不属于 DancingMusic，无法承诺稳定性、隐私或服务条款。因此 v0.5.2 起必须显式配置自己信任的兼容 HTTPS 网关，不再默认连接第三方 Vercel 实例。
 
-This connector is auto-loaded as the default data source.
-
-1. Open the music store → connector switcher (top-right) → **添加连接器** → **GitHub** tab → paste:
-   ```
-   https://github.com/DancingMusic/MusicConnect-NetEase
-   ```
-2. Click **登录** and finish login in the official NetEase page shown inside DancingMusic.
-3. Advanced only: click **高级设置** to override `apiBaseUrl` with your own NeteaseCloudMusicApi deployment.
-
-## Track ID format
-
-`netease:<numeric-id>` — e.g. `netease:33894312`
-
-## Stream URL fallback
-
-NetEase locks most paid tracks behind login cookies. When the proxy can't return a playable URL, the host's `resolvePlayableUrl` falls back to the public outer-url endpoint (`music.163.com/song/media/outer/url?id=X.mp3`) which works for free songs + 30-second previews of paid songs.
-
-## API endpoints used
-
-- `GET /cloudsearch` — search
-- `GET /song/detail` — track detail
-- `GET /song/url/v1` — stream URL
-- `GET /lyric` — lyrics
-- Official web login at `https://music.163.com/#/login` — desktop cookie capture
-- `GET /login/qr/key` / `GET /login/qr/create` / `GET /login/qr/check` — legacy proxy QR fallback
-- `GET /logout` — clear server session when supported by the proxy
-
-## License
-
-MIT
-
-## Versioned releases
-
-This repo uses an auto-release workflow ([`.github/workflows/release.yml`](.github/workflows/release.yml)) that creates a `v<package.json version>` tag + GitHub Release on every push to `main` whose version field has changed. Each release attaches the freshly-built `dist/index.js`.
-
-**Pin to a specific version** (recommended for production):
-```
-https://cdn.jsdelivr.net/gh/DancingMusic/MusicConnect-NetEase@v0.5.1/dist/index.js
+```json
+{
+  "apiBaseUrl": "https://your-netease-gateway.example.com"
+}
 ```
 
-**Always-latest** (handy for dev, but jsdelivr caches `@main` for up to a week):
-```
-https://cdn.jsdelivr.net/gh/DancingMusic/MusicConnect-NetEase@v0.5.1/dist/index.js
+本地开发允许 `http://localhost` 或 `http://127.0.0.1`。匿名仓库不接受、保存或转发 `MUSIC_U`、Cookie、Token 和密码。
+
+## 网关端点
+
+- `GET /cloudsearch`
+- `GET /song/detail`
+- `GET /song/url/v1`
+- `GET /lyric`
+- `GET /top/playlist`
+- `GET /playlist/track/all`
+
+播放地址受版权、地区和上游实现限制，允许返回空值。
+
+## 账号版边界
+
+如需账号歌单、收藏或会员能力，将建立独立仓库和实现 ID（建议 `netease-cloud-music-account`），由主仓凭据代理管理会话。匿名连接器不会重新加入登录代码。
+
+## 开发与发布
+
+```bash
+npm install
+npm test
+npm run build
 ```
 
-### Releasing a new version
+生产环境请固定不可变版本：
 
-1. Edit code under `src/`
-2. `npm version patch` (or `minor` / `major`) — bumps `package.json`
-3. `npm run build` — refreshes `dist/index.js`
-4. Commit (including `dist/`) + push to `main`
-5. The workflow detects the new version, creates the tag, and publishes the GitHub Release automatically
+```text
+https://cdn.jsdelivr.net/gh/DancingMusic/MusicConnect-NetEase@v0.5.2/dist/index.js
+```
+
+统一文档：[DancingMusic Docs](https://dancingmusic.github.io/docs/)
