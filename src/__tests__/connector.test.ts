@@ -33,6 +33,12 @@ describe("NeteaseConnector (contract)", () => {
     expect(await c.search({ keyword: "周杰伦" })).toEqual({ tracks: [], total: 0, page: 1, pageSize: 20 });
   });
 
+  it("rejects unsafe gateway addresses", async () => {
+    const c = new NeteaseConnector();
+    await expect(c.init({ apiBaseUrl: "http://gateway.example.com" })).rejects.toThrow("HTTPS");
+    await expect(c.init({ apiBaseUrl: "https://user:secret@gateway.example.com" })).rejects.toThrow("内嵌凭据");
+  });
+
   it("search returns track-shaped results", async () => {
     mockFetch((url) => {
       expect(url).toContain("/cloudsearch");

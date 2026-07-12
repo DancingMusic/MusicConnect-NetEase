@@ -9,7 +9,8 @@ var NeteaseApi = class {
       url.searchParams.set(k, String(v));
     }
     const res = await fetch(url.toString(), {
-      headers: { "Content-Type": "application/json" }
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(15e3)
     });
     if (!res.ok) {
       throw new Error(`Netease API error: ${res.status} ${res.statusText}`);
@@ -122,7 +123,7 @@ var NeteaseConnector = class {
       variant: "anonymous",
       authRequirement: "none",
       supportedHosts: ["web", "desktop"],
-      version: "0.5.2",
+      version: "0.5.3",
       capabilities: ["search", "stream", "lyrics", "playlist"],
       configSchema: [
         {
@@ -149,7 +150,10 @@ var NeteaseConnector = class {
     if (url.protocol !== "https:" && !(loopback && url.protocol === "http:")) {
       throw new Error("\u7F51\u6613\u4E91\u7F51\u5173\u5FC5\u987B\u4F7F\u7528 HTTPS\uFF1B\u672C\u5730\u5F00\u53D1\u4EC5\u5141\u8BB8 loopback HTTP");
     }
-    this.api = new NeteaseApi(apiBaseUrl);
+    if (url.username || url.password || url.search || url.hash) {
+      throw new Error("\u7F51\u6613\u4E91\u7F51\u5173\u5730\u5740\u4E0D\u80FD\u5305\u542B\u5185\u5D4C\u51ED\u636E\u3001\u67E5\u8BE2\u53C2\u6570\u6216\u7247\u6BB5");
+    }
+    this.api = new NeteaseApi(url.toString());
   }
   async search(query) {
     const keyword = query.keyword || "";

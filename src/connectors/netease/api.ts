@@ -44,7 +44,8 @@ export class NeteaseApi {
       url.searchParams.set(k, String(v));
     }
     const res = await fetch(url.toString(), {
-      headers: { "Content-Type": "application/json" },
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) {
       throw new Error(`Netease API error: ${res.status} ${res.statusText}`);

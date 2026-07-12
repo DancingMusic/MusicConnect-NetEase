@@ -55,7 +55,7 @@ export class NeteaseConnector implements MusicConnector {
     variant: "anonymous",
     authRequirement: "none",
     supportedHosts: ["web", "desktop"],
-    version: "0.5.2",
+    version: "0.5.3",
     capabilities: ["search", "stream", "lyrics", "playlist"],
     configSchema: [
       {
@@ -83,7 +83,10 @@ export class NeteaseConnector implements MusicConnector {
     if (url.protocol !== "https:" && !(loopback && url.protocol === "http:")) {
       throw new Error("网易云网关必须使用 HTTPS；本地开发仅允许 loopback HTTP");
     }
-    this.api = new NeteaseApi(apiBaseUrl);
+    if (url.username || url.password || url.search || url.hash) {
+      throw new Error("网易云网关地址不能包含内嵌凭据、查询参数或片段");
+    }
+    this.api = new NeteaseApi(url.toString());
   }
 
   async search(query: MusicListQuery): Promise<MusicSearchResult> {
