@@ -14,12 +14,17 @@ import { NeteaseApi } from "./api";
 import type { NeteaseSong, NeteasePlaylist } from "./api";
 import { parseLrc, mergeLyrics } from "./lyrics-parser";
 
+function secureCoverUrl(value?: string): string | undefined {
+  if (!value) return undefined;
+  return value.replace(/^http:\/\/(p\d+\.music\.126\.net\/)/i, "https://$1");
+}
+
 function toMusicPlaylist(p: NeteasePlaylist): MusicPlaylist {
   return {
     id: `netease-playlist:${p.id}`,
     name: p.name,
     description: p.description,
-    coverUrl: p.coverImgUrl,
+    coverUrl: secureCoverUrl(p.coverImgUrl),
     trackCount: p.trackCount,
     curator: p.creator?.nickname,
     externalUrl: `https://music.163.com/#/playlist?id=${p.id}`,
@@ -36,7 +41,7 @@ function toMusicTrack(song: NeteaseSong): MusicTrack {
     title: song.name,
     artist: song.ar.map(a => a.name).join(", "),
     album: song.al.name,
-    coverUrl: song.al.picUrl,
+    coverUrl: secureCoverUrl(song.al.picUrl),
     durationSec: Math.round(song.dt / 1000),
     price: 0,
     currency: "CNY",
@@ -55,7 +60,7 @@ export class NeteaseConnector implements MusicConnector {
     variant: "anonymous",
     authRequirement: "none",
     supportedHosts: ["web", "desktop"],
-    version: "0.5.3",
+    version: "0.5.4",
     capabilities: ["search", "stream", "lyrics", "playlist"],
     configSchema: [
       {

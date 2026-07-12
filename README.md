@@ -47,7 +47,7 @@ npm run build
 生产环境请固定不可变版本：
 
 ```text
-https://cdn.jsdelivr.net/gh/DancingMusic/MusicConnect-NetEase@v0.5.3/dist/index.js
+https://cdn.jsdelivr.net/gh/DancingMusic/MusicConnect-NetEase@v0.5.4/dist/index.js
 ```
 
 统一文档：[DancingMusic Docs](https://dancingmusic.github.io/docs/)

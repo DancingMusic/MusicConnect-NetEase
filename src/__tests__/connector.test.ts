@@ -110,7 +110,7 @@ describe("NeteaseConnector (contract)", () => {
           id: 991010,
           name: "经典华语",
           description: "时光长河里的好歌",
-          coverImgUrl: "https://p1.music.126.net/cover.jpg",
+          coverImgUrl: "http://p1.music.126.net/cover.jpg",
           trackCount: 100,
           creator: { nickname: "网易云音乐" },
         }],
@@ -123,7 +123,7 @@ describe("NeteaseConnector (contract)", () => {
     const p = r.playlists[0];
     expect(p.id).toBe("netease-playlist:991010");
     expect(p.name).toBe("经典华语");
-    expect(p.coverUrl).toContain("p1.music.126.net");
+    expect(p.coverUrl).toBe("https://p1.music.126.net/cover.jpg");
     expect(p.trackCount).toBe(100);
     expect(p.curator).toBe("网易云音乐");
     expect(p.externalUrl).toContain("music.163.com");
@@ -153,7 +153,7 @@ describe("NeteaseConnector (contract)", () => {
         songs: [{
           id: 12345, name: "晴天",
           ar: [{ id: 1, name: "周杰伦" }],
-          al: { id: 2, name: "叶惠美", picUrl: "https://x/c.jpg" },
+          al: { id: 2, name: "叶惠美", picUrl: "http://p2.music.126.net/c.jpg" },
           dt: 269000, fee: 0,
         }],
       };
@@ -163,6 +163,7 @@ describe("NeteaseConnector (contract)", () => {
     const r = await c.getPlaylistTracks!("netease-playlist:991010");
     expect(r.tracks).toHaveLength(1);
     expect(r.tracks[0].id).toBe("netease:12345");
+    expect(r.tracks[0].coverUrl).toBe("https://p2.music.126.net/c.jpg");
   });
 
   it("ignores legacy cookie config and never sends it to a configurable catalog proxy", async () => {
