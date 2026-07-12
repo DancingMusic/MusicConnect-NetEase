@@ -50,7 +50,7 @@ https://cdn.jsdelivr.net/gh/DancingMusic/MusicConnect-NetEase@v0.5.1/dist/index.
 
 **Always-latest** (handy for dev, but jsdelivr caches `@main` for up to a week):
 ```
-https://cdn.jsdelivr.net/gh/DancingMusic/MusicConnect-NetEase@main/dist/index.js
+https://cdn.jsdelivr.net/gh/DancingMusic/MusicConnect-NetEase@v0.5.1/dist/index.js
 ```
 
 ### Releasing a new version
