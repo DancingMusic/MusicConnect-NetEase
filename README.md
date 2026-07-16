@@ -44,6 +44,11 @@ npm test
 npm run build
 ```
 
+针对已打包桌面 Release 调试时，先运行 `dancingmusic dev --watch --build`，再以
+`--enable-local-dev-bridge` 启动具体 `.app`。CLI `/health` 中必须看到宿主连接和制品
+读取，应用中必须显示“测试”标识；未配置 `apiBaseUrl` 时空列表是预期行为，不代表网关
+联通成功。
+
 生产环境请固定不可变版本：
 
 ```text
